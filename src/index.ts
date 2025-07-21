@@ -4,6 +4,7 @@ import compression from "compression";
 import cors from "cors";
 import helmet from "helmet";
 import routes from "./routes";
+import { authenticateToken } from "./middleware/auth-middleware";
 
 export const app = express();
 
@@ -15,6 +16,7 @@ app.use(compression());
 app.use(cors());
 app.use(helmet());
 
+app.use(authenticateToken);
 app.use(routes);
 
 const port = process.env.PORT || 4000;
