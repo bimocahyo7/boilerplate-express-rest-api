@@ -3,14 +3,18 @@ import prisma from "../../libs/prisma";
 import ResponseError from "../../errors/response-error";
 import { comparePassword } from "../../utils/hash";
 import { generateToken } from "../../utils/jwt";
+import { validateLoginInput } from "../../validation/auth/auth.validator";
+import { ValidationError } from "../../errors/zod-error-response";
 
 const loginUser = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
   try {
-    if (!email || !password) {
-      throw new ResponseError(400, "Email and password are required.");
+    const validatedInput = validateLoginInput(req.body);
+
+    if (!validatedInput) {
+      throw new ValidationError("Invalid input");
     }
+
+    const { email, password } = validatedInput;
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -41,6 +45,13 @@ const loginUser = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return res.status(error.status).json({
+        error: error.message,
+        details: error.details,
+      });
+    }
+
     if (error instanceof ResponseError) {
       return res.status(error.status).json({ error: error.message });
     }

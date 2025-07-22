@@ -2,15 +2,19 @@ import { Request, Response } from "express";
 import prisma from "../../libs/prisma";
 import ResponseError from "../../errors/response-error";
 import { hashPassword } from "../../utils/hash";
+import { validateRegisterInput } from "../../validation/auth/auth.validator";
+import { ValidationError } from "../../errors/zod-error-response";
 
 const registerUser = async (req: Request, res: Response) => {
-  const { email, name, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required." });
-  }
-
   try {
+    const validatedInput = validateRegisterInput(req.body);
+
+    if (!validatedInput) {
+      throw new ValidationError("Invalid input");
+    }
+
+    const { email, name, password } = validatedInput;
+
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -34,6 +38,13 @@ const registerUser = async (req: Request, res: Response) => {
       user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt },
     });
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return res.status(error.status).json({
+        error: error.message,
+        details: error.details,
+      });
+    }
+
     if (error instanceof ResponseError) {
       return res.status(error.status).json({ error: error.message });
     }
