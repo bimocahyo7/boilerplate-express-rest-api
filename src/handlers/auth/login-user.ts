@@ -5,16 +5,13 @@ import { comparePassword } from "../../utils/hash";
 import { generateToken } from "../../utils/jwt";
 import { ValidationError } from "../../errors/zod-error-response";
 import { LoginSchema } from "../../validation/auth/auth.schema";
+import { ZodError } from "zod";
 
 const loginUser = async (req: Request, res: Response) => {
   try {
-    const result = LoginSchema.safeParse(req.body);
+    const result = LoginSchema.parse(req.body);
 
-    if (!result.success) {
-      throw new ValidationError(result.error);
-    }
-
-    const { email, password } = result.data;
+    const { email, password } = result;
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -45,10 +42,11 @@ const loginUser = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    if (error instanceof ValidationError) {
-      return res.status(error.status).json({
-        message: error.message,
-        errors: error.errors,
+    if (error instanceof ZodError) {
+      const validationError = new ValidationError(error);
+      return res.status(validationError.status).json({
+        message: validationError.message,
+        errors: validationError.errors,
       });
     }
 

@@ -12,11 +12,3 @@ export function generateToken(payload: JwtPayload): string {
 export function verifyToken(token: string): JwtPayload {
   return jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
 }
-
-export function decodeToken(token: string): JwtPayload | null {
-  try {
-    return jwt.decode(token) as JwtPayload;
-  } catch {
-    return null;
-  }
-}

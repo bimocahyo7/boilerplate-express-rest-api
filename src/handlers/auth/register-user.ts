@@ -4,16 +4,13 @@ import ResponseError from "../../errors/response-error";
 import { hashPassword } from "../../utils/hash";
 import { ValidationError } from "../../errors/zod-error-response";
 import { RegisterSchema } from "../../validation/auth/auth.schema";
+import { ZodError } from "zod";
 
 const registerUser = async (req: Request, res: Response) => {
   try {
-    const result = RegisterSchema.safeParse(req.body);
+    const result = RegisterSchema.parse(req.body);
 
-    if (!result.success) {
-      throw new ValidationError(result.error);
-    }
-
-    const { email, name, password } = result.data;
+    const { email, name, password } = result;
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -38,10 +35,11 @@ const registerUser = async (req: Request, res: Response) => {
       user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt },
     });
   } catch (error) {
-    if (error instanceof ValidationError) {
-      return res.status(error.status).json({
-        message: error.message,
-        errors: error.errors,
+    if (error instanceof ZodError) {
+      const validationError = new ValidationError(error);
+      return res.status(validationError.status).json({
+        message: validationError.message,
+        errors: validationError.errors,
       });
     }
 
