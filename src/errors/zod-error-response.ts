@@ -2,24 +2,15 @@ import { ZodError } from "zod";
 
 export class ValidationError extends Error {
   status: number;
-  details: any;
+  errors: any;
 
-  constructor(details: any) {
+  constructor(error: ZodError) {
     super("Validation failed");
     this.status = 400;
-    this.details = details;
+    this.errors = error.issues.map((e) => ({
+      field: e.path.join("."),
+      message: e.message,
+      code: e.code,
+    }));
   }
-}
-
-export function handleZodError(error: unknown) {
-  if (error instanceof ZodError) {
-    throw new ValidationError(
-      error.issues.map((e) => ({
-        field: e.path.join("."),
-        message: e.message,
-      }))
-    );
-  }
-
-  throw error;
 }

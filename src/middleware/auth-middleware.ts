@@ -12,7 +12,7 @@ declare global {
 }
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  if (AUTH_IGNORE_PATHS.some((path) => req.path.startsWith(path))) {
+  if (AUTH_IGNORE_PATHS.includes(req.path)) {
     return next();
   }
 

@@ -4,7 +4,10 @@ import compression from "compression";
 import cors from "cors";
 import helmet from "helmet";
 import routes from "./routes";
+import dotenv from "dotenv"
 import { authenticateToken } from "./middleware/auth-middleware";
+
+dotenv.config();
 
 export const app = express();
 

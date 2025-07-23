@@ -3,18 +3,18 @@ import prisma from "../../libs/prisma";
 import ResponseError from "../../errors/response-error";
 import { comparePassword } from "../../utils/hash";
 import { generateToken } from "../../utils/jwt";
-import { validateLoginInput } from "../../validation/auth/auth.validator";
 import { ValidationError } from "../../errors/zod-error-response";
+import { LoginSchema } from "../../validation/auth/auth.schema";
 
 const loginUser = async (req: Request, res: Response) => {
   try {
-    const validatedInput = validateLoginInput(req.body);
+    const result = LoginSchema.safeParse(req.body);
 
-    if (!validatedInput) {
-      throw new ValidationError("Invalid input");
+    if (!result.success) {
+      throw new ValidationError(result.error);
     }
 
-    const { email, password } = validatedInput;
+    const { email, password } = result.data;
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -47,8 +47,8 @@ const loginUser = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof ValidationError) {
       return res.status(error.status).json({
-        error: error.message,
-        details: error.details,
+        message: error.message,
+        errors: error.errors,
       });
     }
 
