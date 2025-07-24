@@ -3,7 +3,6 @@ import prisma from "../../libs/prisma";
 import ResponseError from "../../errors/response-error";
 import { hashPassword } from "../../utils/hash";
 import { RegisterSchema } from "../../validation/auth/auth.schema";
-import { ZodError } from "zod";
 import handleZodError from "../../utils/handle-zod-error";
 
 const registerUser = async (req: Request, res: Response) => {
@@ -35,9 +34,7 @@ const registerUser = async (req: Request, res: Response) => {
       user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt },
     });
   } catch (error) {
-    if (error instanceof ZodError) {
-      return handleZodError(res, error)
-    }
+    handleZodError(res, error);
 
     if (error instanceof ResponseError) {
       return res.status(error.status).json({ error: error.message });

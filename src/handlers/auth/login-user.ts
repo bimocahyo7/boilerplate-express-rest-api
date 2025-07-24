@@ -4,7 +4,6 @@ import ResponseError from "../../errors/response-error";
 import { comparePassword } from "../../utils/hash";
 import { generateToken } from "../../utils/jwt";
 import { LoginSchema } from "../../validation/auth/auth.schema";
-import { ZodError } from "zod";
 import handleZodError from "../../utils/handle-zod-error";
 
 const loginUser = async (req: Request, res: Response) => {
@@ -42,9 +41,7 @@ const loginUser = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    if (error instanceof ZodError) {
-      return handleZodError(res, error)
-    }
+    handleZodError(res, error);
 
     if (error instanceof ResponseError) {
       return res.status(error.status).json({ error: error.message });
