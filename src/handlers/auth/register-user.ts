@@ -2,9 +2,9 @@ import { Request, Response } from "express";
 import prisma from "../../libs/prisma";
 import ResponseError from "../../errors/response-error";
 import { hashPassword } from "../../utils/hash";
-import { ValidationError } from "../../errors/zod-error-response";
 import { RegisterSchema } from "../../validation/auth/auth.schema";
 import { ZodError } from "zod";
+import handleZodError from "../../utils/handle-zod-error";
 
 const registerUser = async (req: Request, res: Response) => {
   try {
@@ -36,11 +36,7 @@ const registerUser = async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof ZodError) {
-      const validationError = new ValidationError(error);
-      return res.status(validationError.status).json({
-        message: validationError.message,
-        errors: validationError.errors,
-      });
+      return handleZodError(res, error)
     }
 
     if (error instanceof ResponseError) {

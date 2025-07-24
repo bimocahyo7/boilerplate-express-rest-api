@@ -3,9 +3,9 @@ import prisma from "../../libs/prisma";
 import ResponseError from "../../errors/response-error";
 import { comparePassword } from "../../utils/hash";
 import { generateToken } from "../../utils/jwt";
-import { ValidationError } from "../../errors/zod-error-response";
 import { LoginSchema } from "../../validation/auth/auth.schema";
 import { ZodError } from "zod";
+import handleZodError from "../../utils/handle-zod-error";
 
 const loginUser = async (req: Request, res: Response) => {
   try {
@@ -43,11 +43,7 @@ const loginUser = async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof ZodError) {
-      const validationError = new ValidationError(error);
-      return res.status(validationError.status).json({
-        message: validationError.message,
-        errors: validationError.errors,
-      });
+      return handleZodError(res, error)
     }
 
     if (error instanceof ResponseError) {
